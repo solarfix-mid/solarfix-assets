@@ -1,0 +1,1 @@
+# solarfix-assets
