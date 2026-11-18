@@ -1,0 +1,39 @@
+yaml
+name: Convertir imágenes a WebP
+
+on:
+  push:
+    paths:
+      - '**/imagenes/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  webp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar convertidor
+        run: sudo apt-get update && sudo apt-get install -y webp
+
+      - name: Convertir PNG/JPG a WebP
+        run: |
+          find . -path ./.git -prune -o -type f -path '*/imagenes/*' \
+            \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -print0 |
+          while IFS= read -r -d '' f; do
+            out="${f%.*}.webp"
+            if [ ! -f "$out" ]; then
+              cwebp -quiet -q 80 -metadata none "$f" -o "$out"
+              echo "Convertido: $f -> $out"
+            fi
+          done
+
+      - name: Guardar en el repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add -A '*.webp'
+          git diff --cached --quiet || (git commit -m "Conve
